@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Schedule Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Power Schedule</h1>
+            <p class="subtitle">District Generator Rotation</p>
+        </header>
+
+        <div class="controls">
+            <button id="prev-day" class="icon-btn">&larr;</button>
+            <input type="date" id="date-picker">
+            <button id="next-day" class="icon-btn">&rarr;</button>
+        </div>
+
+        <div id="daily-summary" class="summary-card">
+            </div>
+
+        <div id="schedule-container" class="schedule-list">
+            </div>
+
+        <footer>
+            <div class="info-box">
+                <p><strong>Generator Rest:</strong> 11:00 PM - 6:00 AM</p>
+                <p><strong>Elevator (Off-hours):</strong> 10,000 MMK fee</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
