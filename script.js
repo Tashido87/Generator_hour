@@ -22,8 +22,9 @@ const TRANSLATIONS = {
         elevatorLabel: "Elevator (Off-hours):",
         elevatorFee: "10,000 MMK fee",
         toggle_label: "🇺🇸 EN",
-        range_separator: " - ", // Dash for English
-        unit_hour: "", // Not used in English format
+        btn_today: "Today",
+        range_separator: " - ", 
+        unit_hour: "", 
         periods: {
             morning: "AM",
             afternoon: "PM",
@@ -47,13 +48,14 @@ const TRANSLATIONS = {
         elevatorLabel: "ဓာတ်လှေကား (အချိန်ပြင်ပ):",
         elevatorFee: "၁၀,၀၀၀ ကျပ်",
         toggle_label: "🇲🇲 MM",
-        range_separator: " မှ ", // "From" for Burmese
+        btn_today: "ဒီနေ့",
+        range_separator: " မှ ", 
         unit_hour: " နာရီ",
         periods: {
-            morning: "မနက်",   // 5am - 11am
-            afternoon: "နေ့လည်", // 12pm - 4pm
-            evening: "ညနေ",    // 5pm - 9pm
-            night: "ည"         // 10pm+
+            morning: "မနက်",   
+            afternoon: "နေ့လည်", 
+            evening: "ညနေ",    
+            night: "ည"         
         }
     }
 };
@@ -79,6 +81,7 @@ const GEN_RULES = {
 const datePicker = document.getElementById('date-picker');
 const prevBtn = document.getElementById('prev-day');
 const nextBtn = document.getElementById('next-day');
+const todayBtn = document.getElementById('today-btn');
 const summaryContainer = document.getElementById('daily-summary');
 const scheduleContainer = document.getElementById('schedule-container');
 const langToggle = document.getElementById('lang-toggle');
@@ -115,9 +118,13 @@ nextBtn.addEventListener('click', () => {
     updateUI(currentDate);
 });
 
+todayBtn.addEventListener('click', () => {
+    currentDate = new Date();
+    updateUI(currentDate);
+});
+
 // --- HELPER FUNCTIONS ---
 
-// Convert English numbers to Burmese numbers
 function toBurmeseNum(num) {
     return num.toString().split('').map(char => {
         const digit = parseInt(char);
@@ -125,7 +132,6 @@ function toBurmeseNum(num) {
     }).join('');
 }
 
-// Format Time based on Language
 function formatTime(time24) {
     const [hours, minutes] = time24.split(':');
     let h = parseInt(hours, 10);
@@ -133,28 +139,23 @@ function formatTime(time24) {
     
     const t = TRANSLATIONS[currentLang];
     
-    // Determine Period
     let period = "";
     if (h >= 5 && h < 12) period = t.periods.morning;
     else if (h >= 12 && h < 17) period = t.periods.afternoon;
     else if (h >= 17 && h < 22) period = t.periods.evening;
-    else period = t.periods.night; // Late night / Early morning
+    else period = t.periods.night; 
 
-    // Convert to 12-hour format
     let displayH = h % 12;
     displayH = displayH ? displayH : 12; 
 
-    // Formatting Logic
     if (currentLang === 'mm') {
-        // Burmese: "မနက် ၅ နာရီ" (Period + Number + Unit)
         let displayNum = toBurmeseNum(displayH);
         let minStr = "";
         if (m > 0) {
-            minStr = ` ${toBurmeseNum(m)} မိနစ်`; // Add minutes if not :00
+            minStr = ` ${toBurmeseNum(m)} မိနစ်`; 
         }
         return `${period} ${displayNum}${t.unit_hour}${minStr}`;
     } else {
-        // English: "5:00 AM" (Number:Min + Period)
         let minStr = m.toString().padStart(2, '0');
         return `${displayH}:${minStr} ${period}`;
     }
@@ -175,13 +176,28 @@ function applyLanguage(lang) {
 function updateUI(date) {
     const t = TRANSLATIONS[currentLang];
 
-    // 1. Update Date Picker
+    // 1. Check if view is Today
+    const today = new Date();
+    const isToday = date.getDate() === today.getDate() &&
+                    date.getMonth() === today.getMonth() &&
+                    date.getFullYear() === today.getFullYear();
+
+    // 2. Toggle "Highlight" class on Today button
+    if (isToday) {
+        todayBtn.classList.remove('highlight');
+        todayBtn.style.fontWeight = '400';
+    } else {
+        todayBtn.classList.add('highlight');
+        todayBtn.style.fontWeight = '700';
+    }
+
+    // 3. Update Date Picker
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     datePicker.value = `${year}-${month}-${day}`;
 
-    // 2. Determine Pattern
+    // 4. Determine Pattern
     const anchor = new Date(ANCHOR_DATE);
     anchor.setHours(0,0,0,0);
     const target = new Date(date);
@@ -190,13 +206,13 @@ function updateUI(date) {
     const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
     const isAnchorPattern = Math.abs(diffDays) % 2 === 0;
 
-    // 3. Define Schedules
+    // 5. Define Schedules
     let daySchedule = [];
     let patternTitle = "";
     let patternDesc = "";
 
     if (isAnchorPattern) {
-        // Pattern A (Today)
+        // Pattern A
         patternTitle = t.patternA_title;
         patternDesc = t.patternA_desc;
         
@@ -207,7 +223,7 @@ function updateUI(date) {
             { timeKey: '17:00-05:00', start:'17:00', end:'05:00', type: 'grid', nextDay: true }
         ];
     } else {
-        // Pattern B (Tomorrow)
+        // Pattern B
         patternTitle = t.patternB_title;
         patternDesc = t.patternB_desc;
         
@@ -239,16 +255,11 @@ function renderScheduleList(schedule) {
         const card = document.createElement('div');
         card.className = 'time-slot';
 
-        // Create range string: "Start SEPARATOR End"
-        // e.g. Burmese: "မနက် ၅ နာရီ မှ မနက် ၉ နာရီ"
-        // e.g. English: "5:00 AM - 9:00 AM"
         let timeDisplay = `${formatTime(slot.start)}${t.range_separator}${formatTime(slot.end)}`;
-        
         if (slot.nextDay) {
             timeDisplay += ` <small>${t.next_day}</small>`;
         }
 
-        // Header Section
         let statusBadge = '';
         if (slot.type === 'grid') {
             statusBadge = `<span class="status-badge status-grid-on">${t.grid_on}</span>`;
@@ -263,7 +274,6 @@ function renderScheduleList(schedule) {
             </div>
         `;
 
-        // Generator Section
         if (slot.type === 'outage') {
             const rules = GEN_RULES[slot.timeKey];
             if (rules) {
@@ -273,7 +283,6 @@ function renderScheduleList(schedule) {
                     let textStyle = rule.status === 'Running' ? 'color: var(--accent-yellow)' : 'color: var(--text-muted)';
                     let statusText = rule.status === 'Running' ? t.gen_running : t.gen_rest;
                     
-                    // Format generator time range
                     let genRange = `${formatTime(rule.start)}${t.range_separator}${formatTime(rule.end)}`;
 
                     htmlContent += `
@@ -288,7 +297,6 @@ function renderScheduleList(schedule) {
                 htmlContent += `</div>`;
             }
         } else {
-            // Grid ON
             htmlContent += `
                 <div class="gen-info">
                     <div class="gen-row">
