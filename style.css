@@ -70,7 +70,14 @@ h1 {
     font-size: 0.9rem;
 }
 
-/* Controls */
+/* Controls Wrapper */
+.controls-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Date Controls */
 .controls {
     display: flex;
     justify-content: space-between;
@@ -79,6 +86,27 @@ h1 {
     padding: 10px;
     border-radius: var(--border-radius);
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+/* Today Button */
+.today-btn {
+    background-color: var(--card-bg);
+    color: var(--text-muted);
+    border: 1px solid #333;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    font-family: var(--font-family);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+/* State: Not Today (Highlight) */
+.today-btn.highlight {
+    background-color: rgba(245, 197, 24, 0.2);
+    color: var(--accent-yellow);
+    border-color: var(--accent-yellow);
 }
 
 input[type="date"] {
