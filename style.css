@@ -1,11 +1,11 @@
 :root {
-    --bg-color: #141414; /* Netflix-like dark background */
+    --bg-color: #141414;
     --card-bg: #1f1f1f;
     --text-main: #ffffff;
     --text-muted: #a3a3a3;
-    --accent-red: #e50914; /* Outage color */
-    --accent-green: #46d369; /* Grid ON color */
-    --accent-yellow: #f5c518; /* Generator ON color */
+    --accent-red: #e50914;
+    --accent-green: #46d369;
+    --accent-yellow: #f5c518;
     --border-radius: 12px;
     --font-family: 'Inter', sans-serif;
 }
@@ -23,10 +23,33 @@ body {
 
 .app-container {
     width: 100%;
-    max-width: 500px; /* Mobile app feel */
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+/* Language Toggle */
+.top-bar {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.lang-btn {
+    background-color: var(--card-bg);
+    border: 1px solid #333;
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.lang-btn:hover {
+    background-color: #333;
+    border-color: #555;
 }
 
 /* Header */
