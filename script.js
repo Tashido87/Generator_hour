@@ -56,8 +56,13 @@ const GEN_RULES = {
         { start: '12:00', end: '13:00', status: 'Running' }
     ],
     '13:00-17:00': [
+        // 1 PM to 2 PM: Rest
+        { start: '13:00', end: '14:00', status: 'Rest' },
+        // 2 PM to 3 PM: Running
         { start: '14:00', end: '15:00', status: 'Running' },
+        // 3 PM to 4 PM: Rest
         { start: '15:00', end: '16:00', status: 'Rest' },
+        // 4 PM to 5 PM: Running
         { start: '16:00', end: '17:00', status: 'Running' }
     ]
 };
@@ -161,7 +166,7 @@ function formatTime(time24) {
     if (currentLang === 'mm') {
         let displayNum = toBurmeseNum(displayH);
         let minStr = m > 0 ? `:${toBurmeseNum(m)}` : '';
-        return `${displayNum}${minStr} ${period}`; // Removed unit_hour for cleaner UI
+        return `${displayNum}${minStr} ${period}`;
     } else {
         let minStr = m.toString().padStart(2, '0');
         return `${displayH}:${minStr} ${period}`;
