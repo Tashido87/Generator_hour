@@ -120,7 +120,6 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    /* Default fallback */
     background: rgba(255,255,255,0.1);
     color: var(--text-main);
 }
@@ -191,7 +190,7 @@ input[type="date"] {
 
 /* --- Summary --- */
 .summary-card {
-    background: #000; /* Darker to stand out or blend */
+    background: #000;
     border: 1px solid var(--accent-yellow);
     border-left: 4px solid var(--accent-yellow);
     border-radius: var(--border-radius-md);
@@ -214,17 +213,16 @@ input[type="date"] {
     background: var(--card-surface);
     border-radius: var(--border-radius-lg);
     padding: 16px;
-    position: relative; /* For the active dot */
+    position: relative;
     border: 2px solid transparent;
     transition: transform 0.2s;
 }
 
-/* Active State Styles */
+/* Active Slot Highlight */
 .time-slot.active-now {
-    border-color: var(--accent-red); /* Default red, can be overridden by JS */
+    border-color: var(--accent-red);
 }
 
-/* The pulsing dot */
 .live-dot {
     position: absolute;
     top: 16px;
@@ -262,7 +260,6 @@ input[type="date"] {
     margin-left: 6px;
 }
 
-/* Status Badges (Grid ON/OFF) */
 .status-pill {
     display: inline-flex;
     align-items: center;
@@ -277,10 +274,9 @@ input[type="date"] {
 
 .status-grid-on { background: var(--accent-green-bg); color: var(--accent-green); }
 .status-outage { background: var(--accent-red-bg); color: var(--accent-red); }
-
 .status-icon svg { display: block; }
 
-/* Inner Cards (Generators / Electricity) */
+/* Inner Cards */
 .inner-list {
     display: flex;
     flex-direction: column;
@@ -294,6 +290,29 @@ input[type="date"] {
     display: flex;
     align-items: center;
     gap: 12px;
+    border: 1px solid transparent; /* Prepare for border transition */
+    transition: all 0.3s ease;
+}
+
+/* --- ACTIVE INNER CARD STYLES --- */
+.inner-card.active-inner {
+    border-color: var(--accent-yellow);
+    background: rgba(255, 214, 10, 0.08); /* Yellow tint */
+    box-shadow: 0 0 15px rgba(255, 214, 10, 0.1);
+}
+
+/* Resting state override (Grey) */
+.inner-card.active-inner.status-rest {
+    border-color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+/* Grid/Electricity Available state override (Green) */
+.inner-card.active-inner.status-grid {
+    border-color: var(--accent-green);
+    background: rgba(48, 209, 88, 0.08);
+    box-shadow: 0 0 15px rgba(48, 209, 88, 0.1);
 }
 
 .inner-icon-box {
