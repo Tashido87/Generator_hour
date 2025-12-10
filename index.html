@@ -4,28 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Power Schedule Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="app-container">
+        
         <div class="top-bar">
+            <div class="brand">
+                <div class="brand-dot"></div>
+                <span data-key="title">Power Schedule</span>
+            </div>
             <button id="lang-toggle" class="lang-btn">🇺🇸 EN</button>
         </div>
 
-        <header>
-            <h1 data-key="title">Power Schedule</h1>
-            <p class="subtitle" data-key="subtitle">District Generator Rotation</p>
-        </header>
-
         <div class="controls-wrapper">
-            <div class="controls">
-                <button id="prev-day" class="icon-btn">&larr;</button>
-                <input type="date" id="date-picker">
-                <button id="next-day" class="icon-btn">&rarr;</button>
+            <div class="date-display">
+                <h2 id="display-date-text">Loading...</h2>
+                <p id="display-pattern-name" class="pattern-tag">Pattern A</p>
             </div>
-            <button id="today-btn" class="today-btn" data-key="btn_today">Today</button>
+
+            <div class="controls">
+                <button id="prev-day" class="icon-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                
+                <div class="picker-wrapper">
+                    <span id="picker-label" class="picker-label">Select Date</span>
+                    <input type="date" id="date-picker">
+                </div>
+
+                <button id="next-day" class="icon-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+            </div>
+            
+            <button id="today-btn" class="today-btn" data-key="btn_today">
+                Go to Today
+            </button>
         </div>
 
         <div id="daily-summary" class="summary-card">
