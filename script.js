@@ -56,13 +56,9 @@ const GEN_RULES = {
         { start: '12:00', end: '13:00', status: 'Running' }
     ],
     '13:00-17:00': [
-        // 1 PM to 2 PM: Rest
         { start: '13:00', end: '14:00', status: 'Rest' },
-        // 2 PM to 3 PM: Running
         { start: '14:00', end: '15:00', status: 'Running' },
-        // 3 PM to 4 PM: Rest
         { start: '15:00', end: '16:00', status: 'Rest' },
-        // 4 PM to 5 PM: Running
         { start: '16:00', end: '17:00', status: 'Running' }
     ]
 };
@@ -164,12 +160,12 @@ function formatTime(time24) {
     displayH = displayH ? displayH : 12; 
 
     if (currentLang === 'mm') {
-        // Burmese Format: Period + Number (e.g., မနက် ၅)
+        // Burmese Format
         let displayNum = toBurmeseNum(displayH);
         let minStr = m > 0 ? `:${toBurmeseNum(m)}` : '';
         return `${period} ${displayNum}${minStr}`;
     } else {
-        // English Format: Number + Period (e.g., 5:00 AM)
+        // English Format
         let minStr = m.toString().padStart(2, '0');
         return `${displayH}:${minStr} ${period}`;
     }
@@ -278,25 +274,25 @@ function renderScheduleList(schedule, isToday) {
         const card = document.createElement('div');
         card.className = 'time-slot';
 
-        // Check Active State
-        let isActive = false;
+        // Check Main Slot Active State
+        let isSlotActive = false;
+        let startVal, endVal;
+
         if (isToday) {
             const [sH, sM] = slot.start.split(':').map(Number);
             const [eH, eM] = slot.end.split(':').map(Number);
-            let startVal = sH * 60 + sM;
-            let endVal = eH * 60 + eM;
+            startVal = sH * 60 + sM;
+            endVal = eH * 60 + eM;
             
             if (slot.nextDay) {
-                // Handle overlap to next day
-                if (currentTimeVal >= startVal || currentTimeVal < endVal) isActive = true;
+                if (currentTimeVal >= startVal || currentTimeVal < endVal) isSlotActive = true;
             } else {
-                if (currentTimeVal >= startVal && currentTimeVal < endVal) isActive = true;
+                if (currentTimeVal >= startVal && currentTimeVal < endVal) isSlotActive = true;
             }
         }
 
-        if (isActive) {
+        if (isSlotActive) {
             card.classList.add('active-now');
-            // Add the pulsing dot
             const dot = document.createElement('div');
             dot.className = 'live-dot';
             card.appendChild(dot);
@@ -320,14 +316,31 @@ function renderScheduleList(schedule, isToday) {
             if (rules) {
                 innerContent += `<div class="inner-list">`;
                 rules.forEach(rule => {
+                    // Logic to check if this specific inner rule is active
+                    let isInnerActive = false;
+                    if (isToday) {
+                        const [rSH, rSM] = rule.start.split(':').map(Number);
+                        const [rEH, rEM] = rule.end.split(':').map(Number);
+                        let rStartVal = rSH * 60 + rSM;
+                        let rEndVal = rEH * 60 + rEM;
+                        // Assuming generator rules don't cross midnight for now, as they are within the outage block
+                        if (currentTimeVal >= rStartVal && currentTimeVal < rEndVal) {
+                            isInnerActive = true;
+                        }
+                    }
+
                     const isRunning = rule.status === 'Running';
                     const iconBoxClass = isRunning ? 'icon-gen' : 'icon-rest';
                     const iconSvg = isRunning ? ICONS.genBox : ICONS.restBox;
                     const titleText = isRunning ? t.gen_running : t.gen_rest;
                     const rangeText = `${formatTime(rule.start)}${t.range_separator}${formatTime(rule.end)}`;
+                    
+                    // Add active class and specific status class
+                    let activeClass = isInnerActive ? 'active-inner' : '';
+                    let statusClass = isRunning ? '' : 'status-rest'; // Default is yellow, override if rest
 
                     innerContent += `
-                        <div class="inner-card">
+                        <div class="inner-card ${activeClass} ${statusClass}">
                             <div class="inner-icon-box ${iconBoxClass}">${iconSvg}</div>
                             <div class="inner-content">
                                 <span class="inner-title">${titleText}</span>
@@ -340,9 +353,12 @@ function renderScheduleList(schedule, isToday) {
             }
         } else {
             // Electricity Available Inner Card
+            // If the parent grid slot is active, we highlight this inner card too (green)
+            let activeClass = isSlotActive ? 'active-inner status-grid' : '';
+            
             innerContent += `
                 <div class="inner-list">
-                    <div class="inner-card">
+                    <div class="inner-card ${activeClass}">
                         <div class="inner-icon-box icon-elec">${ICONS.elecBox}</div>
                         <div class="inner-content">
                             <span class="inner-title" style="color:var(--accent-green)">${t.elec_avail}</span>
