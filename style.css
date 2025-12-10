@@ -21,8 +21,6 @@
     --accent-yellow: #ffd60a;
     --accent-yellow-bg: rgba(255, 214, 10, 0.15);
     
-    --accent-blue: #0a84ff;
-    
     --border-radius-lg: 18px;
     --border-radius-md: 12px;
     --border-radius-sm: 8px;
@@ -93,7 +91,7 @@ body {
 }
 .lang-btn:hover { background: #3a3a3c; }
 
-/* --- Hero Card (Date & Pattern) --- */
+/* --- Hero Card --- */
 .hero-card {
     background: var(--card-surface);
     border-radius: var(--border-radius-lg);
@@ -218,7 +216,6 @@ input[type="date"] {
     transition: transform 0.2s;
 }
 
-/* Active Slot Highlight */
 .time-slot.active-now {
     border-color: var(--accent-red);
 }
@@ -276,7 +273,7 @@ input[type="date"] {
 .status-outage { background: var(--accent-red-bg); color: var(--accent-red); }
 .status-icon svg { display: block; }
 
-/* Inner Cards */
+/* Inner Cards & Countdown Bar */
 .inner-list {
     display: flex;
     flex-direction: column;
@@ -290,31 +287,63 @@ input[type="date"] {
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 1px solid transparent; /* Prepare for border transition */
+    border: 1px solid transparent;
     transition: all 0.3s ease;
+    
+    /* For the countdown bar */
+    position: relative;
+    overflow: hidden; 
+    --progress: 0%; /* JS will update this */
 }
 
-/* --- ACTIVE INNER CARD STYLES --- */
+/* The Countdown Background Bar */
+.inner-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--progress);
+    background-color: rgba(255, 255, 255, 0.05); /* Default fallback */
+    z-index: 0;
+    transition: width 1s linear; /* Smooth movement if updated live */
+    pointer-events: none;
+}
+
+/* Ensure text/icons sit ON TOP of the background bar */
+.inner-icon-box, .inner-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- ACTIVE & PROGRESS COLORS --- */
 .inner-card.active-inner {
     border-color: var(--accent-yellow);
-    background: rgba(255, 214, 10, 0.08); /* Yellow tint */
-    box-shadow: 0 0 15px rgba(255, 214, 10, 0.1);
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
 }
 
-/* Resting state override (Grey) */
+/* Running (Yellow) Bar */
+.inner-card.active-inner::before {
+    background-color: rgba(255, 214, 10, 0.15); 
+}
+
+/* Rest (Grey) Bar */
 .inner-card.active-inner.status-rest {
     border-color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+.inner-card.active-inner.status-rest::before {
+    background-color: rgba(255, 255, 255, 0.12);
 }
 
-/* Grid/Electricity Available state override (Green) */
+/* Grid (Green) Bar */
 .inner-card.active-inner.status-grid {
     border-color: var(--accent-green);
-    background: rgba(48, 209, 88, 0.08);
-    box-shadow: 0 0 15px rgba(48, 209, 88, 0.1);
+}
+.inner-card.active-inner.status-grid::before {
+    background-color: rgba(48, 209, 88, 0.15);
 }
 
+/* Icon Boxes */
 .inner-icon-box {
     width: 32px;
     height: 32px;
@@ -343,7 +372,6 @@ input[type="date"] {
     margin-top: 2px;
 }
 
-/* Footer */
 footer {
     text-align: center;
     margin-top: 10px;
@@ -359,7 +387,6 @@ footer {
 }
 .info-box strong { color: var(--accent-yellow); }
 
-/* Animation */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
