@@ -16,32 +16,37 @@
                 <div class="brand-dot"></div>
                 <span data-key="title">Power Schedule</span>
             </div>
-            <button id="lang-toggle" class="lang-btn">🇺🇸 EN</button>
+            <button id="lang-toggle" class="lang-btn">
+                <span class="flag-icon">🇺🇸</span> <span class="lang-text">EN</span>
+            </button>
         </div>
 
-        <div class="controls-wrapper">
-            <div class="date-display">
-                <h2 id="display-date-text">Loading...</h2>
-                <p id="display-pattern-name" class="pattern-tag">Pattern A</p>
+        <div class="hero-card">
+            <h2 id="display-date-text">Loading...</h2>
+            <div id="display-pattern-badge" class="pattern-badge">
+                Loading Pattern...
             </div>
+        </div>
 
-            <div class="controls">
-                <button id="prev-day" class="icon-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <div class="nav-container">
+            <div class="nav-bar">
+                <button id="prev-day" class="nav-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
                 </button>
                 
                 <div class="picker-wrapper">
+                    <svg class="calendar-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     <span id="picker-label" class="picker-label">Select Date</span>
                     <input type="date" id="date-picker">
                 </div>
 
-                <button id="next-day" class="icon-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                <button id="next-day" class="nav-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
                 </button>
             </div>
             
             <button id="today-btn" class="today-btn" data-key="btn_today">
-                Go to Today
+                Today
             </button>
         </div>
 
