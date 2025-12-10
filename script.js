@@ -27,20 +27,20 @@ const TRANSLATIONS = {
     mm: {
         title: "မီးပေးချိန် ဇယား",
         patternA_title: "ပုံစံ A (မနက်ပိုင်း မီးပျက်)",
-        patternA_desc: "မီးပျက်ချိန် - ၉ နာရီ မှ ၁ နာရီ",
+        patternA_desc: "မီးပျက်ချိန် - မနက် ၉ မှ နေ့လည် ၁",
         patternB_title: "ပုံစံ B (နှစ်ချိန်ခွဲ)",
-        patternB_desc: "မီးပျက်ချိန် - မနက် ၇:၃၀-၉ ၊ နေ့လည် ၁-၅",
+        patternB_desc: "မီးပျက်ချိန် - မနက် ၇:၃၀ မှ ၉ ၊ နေ့လည် ၁ မှ ၅",
         grid_on: "မီးလာ",
         power_off: "မီးပျက်",
         gen_running: "မီးစက်မောင်း",
         gen_rest: "မီးစက်နား",
         elec_avail: "မီးလာ (EPC)",
-        next_day: "(နောက်ရက်)",
+        next_day: "(နောက်နေ့)",
         elevatorLabel: "ဓာတ်လှေကား (အချိန်ပြင်ပ):",
         elevatorFee: "၁၀,၀၀၀ ကျပ်",
         btn_today: "ဒီနေ့",
         range_separator: " မှ ", 
-        unit_hour: " နာရီ",
+        unit_hour: "",
         periods: { morning: "မနက်", afternoon: "နေ့လည်", evening: "ညနေ", night: "ည" },
         months: ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "သြဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"]
     }
@@ -164,10 +164,12 @@ function formatTime(time24) {
     displayH = displayH ? displayH : 12; 
 
     if (currentLang === 'mm') {
+        // Burmese Format: Period + Number (e.g., မနက် ၅)
         let displayNum = toBurmeseNum(displayH);
         let minStr = m > 0 ? `:${toBurmeseNum(m)}` : '';
-        return `${displayNum}${minStr} ${period}`;
+        return `${period} ${displayNum}${minStr}`;
     } else {
+        // English Format: Number + Period (e.g., 5:00 AM)
         let minStr = m.toString().padStart(2, '0');
         return `${displayH}:${minStr} ${period}`;
     }
