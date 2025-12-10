@@ -1,27 +1,23 @@
 // --- CONFIGURATION ---
 const ANCHOR_DATE = new Date('2025-12-09T00:00:00');
 
-// Burmese Numerals Map
 const BURMESE_NUMS = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
 
-// Translation Dictionary
 const TRANSLATIONS = {
     en: {
         title: "Power Schedule",
-        subtitle: "Generator Rotation",
-        patternA_title: "Pattern A: Late Morning Outage",
+        patternA_title: "PATTERN A: LATE MORNING OUTAGE",
         patternA_desc: "Outage: 9:00 AM - 1:00 PM",
-        patternB_title: "Pattern B: Split Outage",
+        patternB_title: "PATTERN B: SPLIT OUTAGE",
         patternB_desc: "Outage: 7:30 AM - 9:00 AM & 1:00 PM - 5:00 PM",
-        grid_on: "Grid ON",
-        power_off: "Grid OFF",
+        grid_on: "GRID ON",
+        power_off: "GRID OFF",
         gen_running: "Generator ON",
         gen_rest: "Gen Resting",
         elec_avail: "Electricity Available",
         next_day: "(Next Day)",
         elevatorLabel: "Elevator (Off-hours):",
         elevatorFee: "10,000 MMK fee",
-        toggle_label: "🇺🇸 EN",
         btn_today: "Today",
         range_separator: " - ", 
         unit_hour: "", 
@@ -30,7 +26,6 @@ const TRANSLATIONS = {
     },
     mm: {
         title: "မီးပေးချိန် ဇယား",
-        subtitle: "မီးစက် အလှည့်ကျစနစ်",
         patternA_title: "ပုံစံ A (မနက်ပိုင်း မီးပျက်)",
         patternA_desc: "မီးပျက်ချိန် - ၉ နာရီ မှ ၁ နာရီ",
         patternB_title: "ပုံစံ B (နှစ်ချိန်ခွဲ)",
@@ -43,7 +38,6 @@ const TRANSLATIONS = {
         next_day: "(နောက်ရက်)",
         elevatorLabel: "ဓာတ်လှေကား (အချိန်ပြင်ပ):",
         elevatorFee: "၁၀,၀၀၀ ကျပ်",
-        toggle_label: "🇲🇲 MM",
         btn_today: "ဒီနေ့",
         range_separator: " မှ ", 
         unit_hour: " နာရီ",
@@ -68,6 +62,15 @@ const GEN_RULES = {
     ]
 };
 
+// Icons (SVG Strings)
+const ICONS = {
+    bolt: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+    power: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`,
+    genBox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+    restBox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M7 12h10"></path></svg>`,
+    elecBox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`
+};
+
 // --- DOM ELEMENTS ---
 const datePicker = document.getElementById('date-picker');
 const prevBtn = document.getElementById('prev-day');
@@ -77,7 +80,7 @@ const summaryContainer = document.getElementById('daily-summary');
 const scheduleContainer = document.getElementById('schedule-container');
 const langToggle = document.getElementById('lang-toggle');
 const displayDateText = document.getElementById('display-date-text');
-const displayPatternName = document.getElementById('display-pattern-name');
+const displayPatternBadge = document.getElementById('display-pattern-badge');
 
 // --- STATE MANAGEMENT ---
 let currentLang = localStorage.getItem('powerSched_lang') || 'en';
@@ -158,7 +161,7 @@ function formatTime(time24) {
     if (currentLang === 'mm') {
         let displayNum = toBurmeseNum(displayH);
         let minStr = m > 0 ? `:${toBurmeseNum(m)}` : '';
-        return `${period} ${displayNum}${minStr}${t.unit_hour}`;
+        return `${displayNum}${minStr} ${period}`; // Removed unit_hour for cleaner UI
     } else {
         let minStr = m.toString().padStart(2, '0');
         return `${displayH}:${minStr} ${period}`;
@@ -169,7 +172,16 @@ function formatTime(time24) {
 
 function applyLanguage(lang) {
     const t = TRANSLATIONS[lang];
-    langToggle.textContent = t.toggle_label;
+    const langLabel = langToggle.querySelector('.lang-text');
+    const flagIcon = langToggle.querySelector('.flag-icon');
+    
+    if (lang === 'en') {
+        flagIcon.textContent = "🇺🇸";
+        langLabel.textContent = "EN";
+    } else {
+        flagIcon.textContent = "🇲🇲";
+        langLabel.textContent = "MM";
+    }
     
     document.querySelectorAll('[data-key]').forEach(el => {
         const key = el.getAttribute('data-key');
@@ -186,16 +198,10 @@ function updateUI(date) {
                     date.getMonth() === today.getMonth() &&
                     date.getFullYear() === today.getFullYear();
 
-    // 2. Button State
-    if (isToday) {
-        todayBtn.classList.add('active');
-        todayBtn.classList.remove('hidden-state');
-    } else {
-        todayBtn.classList.remove('active');
-        todayBtn.classList.add('hidden-state');
-    }
+    if (isToday) todayBtn.classList.add('active');
+    else todayBtn.classList.remove('active');
 
-    // 3. Date Header
+    // 2. Date Header
     displayDateText.textContent = formatDateHeader(date);
     
     const y = date.getFullYear();
@@ -203,7 +209,7 @@ function updateUI(date) {
     const d = String(date.getDate()).padStart(2, '0');
     datePicker.value = `${y}-${m}-${d}`;
 
-    // 4. Determine Pattern
+    // 3. Determine Pattern
     const anchor = new Date(ANCHOR_DATE);
     anchor.setHours(0,0,0,0);
     const target = new Date(date);
@@ -212,14 +218,18 @@ function updateUI(date) {
     const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
     const isAnchorPattern = Math.abs(diffDays) % 2 === 0;
 
-    // 5. Generate Schedule Data
-    let daySchedule = [];
+    // 4. Update Colors & Badge based on Pattern
     let patternTitle = "";
+    let daySchedule = [];
     
     if (isAnchorPattern) {
-        // Pattern A
+        // Pattern A (Red Theme)
         patternTitle = t.patternA_title;
-        displayPatternName.style.color = "var(--accent-red)";
+        displayPatternBadge.textContent = patternTitle;
+        displayPatternBadge.style.backgroundColor = "rgba(255, 69, 58, 0.2)";
+        displayPatternBadge.style.color = "var(--accent-red)";
+        summaryContainer.style.borderLeftColor = "var(--accent-red)";
+        
         daySchedule = [
             { timeKey: '05:00-09:00', start:'05:00', end:'09:00', type: 'grid' },
             { timeKey: '09:00-13:00', start:'09:00', end:'13:00', type: 'outage' },
@@ -227,11 +237,14 @@ function updateUI(date) {
             { timeKey: '17:00-05:00', start:'17:00', end:'05:00', type: 'grid', nextDay: true }
         ];
     } else {
-        // Pattern B
+        // Pattern B (Yellow Theme)
         patternTitle = t.patternB_title;
-        displayPatternName.style.color = "var(--accent-yellow)";
+        displayPatternBadge.textContent = patternTitle;
+        displayPatternBadge.style.backgroundColor = "rgba(255, 214, 10, 0.2)";
+        displayPatternBadge.style.color = "var(--accent-yellow)";
+        summaryContainer.style.borderLeftColor = "var(--accent-yellow)";
+
         daySchedule = [
-            // Split the morning slot: 5:00-7:30 is Grid, 7:30-9:00 is Outage
             { timeKey: '05:00-07:30', start:'05:00', end:'07:30', type: 'grid' },
             { timeKey: '07:30-09:00', start:'07:30', end:'09:00', type: 'outage' },
             { timeKey: '09:00-13:00', start:'09:00', end:'13:00', type: 'grid' },
@@ -240,10 +253,8 @@ function updateUI(date) {
         ];
     }
 
-    displayPatternName.textContent = patternTitle;
-    
-    summaryContainer.innerHTML = `<span>${isAnchorPattern ? t.patternA_desc : t.patternB_desc}</span>`;
-    summaryContainer.style.borderLeftColor = isAnchorPattern ? "var(--accent-red)" : "var(--accent-yellow)";
+    // Summary Text
+    summaryContainer.innerHTML = isAnchorPattern ? t.patternA_desc : t.patternB_desc;
 
     renderScheduleList(daySchedule, isToday);
 }
@@ -260,7 +271,7 @@ function renderScheduleList(schedule, isToday) {
         const card = document.createElement('div');
         card.className = 'time-slot';
 
-        // Check if Active Slot
+        // Check Active State
         let isActive = false;
         if (isToday) {
             const [sH, sM] = slot.start.split(':').map(Number);
@@ -269,61 +280,79 @@ function renderScheduleList(schedule, isToday) {
             let endVal = eH * 60 + eM;
             
             if (slot.nextDay) {
+                // Handle overlap to next day
                 if (currentTimeVal >= startVal || currentTimeVal < endVal) isActive = true;
             } else {
                 if (currentTimeVal >= startVal && currentTimeVal < endVal) isActive = true;
             }
         }
 
-        if (isActive) card.classList.add('active-now');
+        if (isActive) {
+            card.classList.add('active-now');
+            // Add the pulsing dot
+            const dot = document.createElement('div');
+            dot.className = 'live-dot';
+            card.appendChild(dot);
+        }
 
+        // Header Section
         let timeDisplay = `${formatTime(slot.start)}${t.range_separator}${formatTime(slot.end)}`;
         if (slot.nextDay) timeDisplay += ` <small>${t.next_day}</small>`;
 
-        let statusBadge = slot.type === 'grid' 
-            ? `<span class="status-badge status-grid-on">${t.grid_on}</span>`
-            : `<span class="status-badge status-outage">${t.power_off}</span>`;
+        let statusBadge = '';
+        if (slot.type === 'grid') {
+            statusBadge = `<div class="status-pill status-grid-on"><span class="status-icon">${ICONS.bolt}</span> ${t.grid_on}</div>`;
+        } else {
+            statusBadge = `<div class="status-pill status-outage"><span class="status-icon">${ICONS.power}</span> ${t.power_off}</div>`;
+        }
 
-        let htmlContent = `
-            <div class="slot-header">
-                <span class="time-range">${timeDisplay}</span>
-                ${statusBadge}
-            </div>
-        `;
+        let innerContent = '';
 
         if (slot.type === 'outage') {
             const rules = GEN_RULES[slot.timeKey];
             if (rules) {
-                htmlContent += `<div class="gen-info">`;
+                innerContent += `<div class="inner-list">`;
                 rules.forEach(rule => {
-                    let dotClass = rule.status === 'Running' ? 'dot-yellow' : 'dot-grey';
-                    let textStyle = rule.status === 'Running' ? 'color: var(--accent-yellow)' : 'color: var(--text-muted)';
-                    let statusText = rule.status === 'Running' ? t.gen_running : t.gen_rest;
-                    let genRange = `${formatTime(rule.start)}${t.range_separator}${formatTime(rule.end)}`;
+                    const isRunning = rule.status === 'Running';
+                    const iconBoxClass = isRunning ? 'icon-gen' : 'icon-rest';
+                    const iconSvg = isRunning ? ICONS.genBox : ICONS.restBox;
+                    const titleText = isRunning ? t.gen_running : t.gen_rest;
+                    const rangeText = `${formatTime(rule.start)}${t.range_separator}${formatTime(rule.end)}`;
 
-                    htmlContent += `
-                        <div class="gen-row">
-                            <span class="dot ${dotClass}"></span>
-                            <span style="${textStyle}">
-                                <strong>${genRange}:</strong> ${statusText}
-                            </span>
+                    innerContent += `
+                        <div class="inner-card">
+                            <div class="inner-icon-box ${iconBoxClass}">${iconSvg}</div>
+                            <div class="inner-content">
+                                <span class="inner-title">${titleText}</span>
+                                <span class="inner-desc">${rangeText}</span>
+                            </div>
                         </div>
                     `;
                 });
-                htmlContent += `</div>`;
+                innerContent += `</div>`;
             }
         } else {
-            htmlContent += `
-                <div class="gen-info">
-                    <div class="gen-row">
-                        <span class="dot dot-green"></span>
-                        <span style="color: var(--accent-green)">${t.elec_avail}</span>
+            // Electricity Available Inner Card
+            innerContent += `
+                <div class="inner-list">
+                    <div class="inner-card">
+                        <div class="inner-icon-box icon-elec">${ICONS.elecBox}</div>
+                        <div class="inner-content">
+                            <span class="inner-title" style="color:var(--accent-green)">${t.elec_avail}</span>
+                        </div>
                     </div>
                 </div>
             `;
         }
 
-        card.innerHTML = htmlContent;
+        card.innerHTML += `
+            <div class="slot-header">
+                <div class="time-range">${timeDisplay}</div>
+                ${statusBadge}
+            </div>
+            ${innerContent}
+        `;
+        
         scheduleContainer.appendChild(card);
     });
 }
