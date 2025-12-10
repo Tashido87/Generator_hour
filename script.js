@@ -91,6 +91,16 @@ let currentDate = new Date();
 applyLanguage(currentLang);
 updateUI(currentDate);
 
+// Refresh every minute to update progress bars
+setInterval(() => {
+    // Only update if looking at today
+    const now = new Date();
+    if (currentDate.getDate() === now.getDate() && 
+        currentDate.getMonth() === now.getMonth()) {
+        updateUI(currentDate);
+    }
+}, 60000);
+
 // --- EVENT LISTENERS ---
 langToggle.addEventListener('click', () => {
     currentLang = currentLang === 'en' ? 'mm' : 'en';
@@ -226,7 +236,7 @@ function updateUI(date) {
     let daySchedule = [];
     
     if (isAnchorPattern) {
-        // Pattern A (Red Theme)
+        // Pattern A
         patternTitle = t.patternA_title;
         displayPatternBadge.textContent = patternTitle;
         displayPatternBadge.style.backgroundColor = "rgba(255, 69, 58, 0.2)";
@@ -240,7 +250,7 @@ function updateUI(date) {
             { timeKey: '17:00-05:00', start:'17:00', end:'05:00', type: 'grid', nextDay: true }
         ];
     } else {
-        // Pattern B (Yellow Theme)
+        // Pattern B
         patternTitle = t.patternB_title;
         displayPatternBadge.textContent = patternTitle;
         displayPatternBadge.style.backgroundColor = "rgba(255, 214, 10, 0.2)";
@@ -256,7 +266,6 @@ function updateUI(date) {
         ];
     }
 
-    // Summary Text
     summaryContainer.innerHTML = isAnchorPattern ? t.patternA_desc : t.patternB_desc;
 
     renderScheduleList(daySchedule, isToday);
@@ -316,16 +325,24 @@ function renderScheduleList(schedule, isToday) {
             if (rules) {
                 innerContent += `<div class="inner-list">`;
                 rules.forEach(rule => {
-                    // Logic to check if this specific inner rule is active
+                    // Logic to check if inner rule is active & Calc progress
                     let isInnerActive = false;
+                    let percentRemaining = 100; // Default full if future
+
                     if (isToday) {
                         const [rSH, rSM] = rule.start.split(':').map(Number);
                         const [rEH, rEM] = rule.end.split(':').map(Number);
                         let rStartVal = rSH * 60 + rSM;
                         let rEndVal = rEH * 60 + rEM;
-                        // Assuming generator rules don't cross midnight for now, as they are within the outage block
+                        
                         if (currentTimeVal >= rStartVal && currentTimeVal < rEndVal) {
                             isInnerActive = true;
+                            // Calculate percentage remaining (100% at start, 0% at end)
+                            const totalDuration = rEndVal - rStartVal;
+                            const elapsed = currentTimeVal - rStartVal;
+                            percentRemaining = Math.max(0, 100 - ((elapsed / totalDuration) * 100));
+                        } else if (currentTimeVal >= rEndVal) {
+                            percentRemaining = 0; // Past
                         }
                     }
 
@@ -335,12 +352,12 @@ function renderScheduleList(schedule, isToday) {
                     const titleText = isRunning ? t.gen_running : t.gen_rest;
                     const rangeText = `${formatTime(rule.start)}${t.range_separator}${formatTime(rule.end)}`;
                     
-                    // Add active class and specific status class
                     let activeClass = isInnerActive ? 'active-inner' : '';
-                    let statusClass = isRunning ? '' : 'status-rest'; // Default is yellow, override if rest
+                    let statusClass = isRunning ? '' : 'status-rest'; 
+                    let styleAttr = isInnerActive ? `style="--progress: ${percentRemaining}%"` : '';
 
                     innerContent += `
-                        <div class="inner-card ${activeClass} ${statusClass}">
+                        <div class="inner-card ${activeClass} ${statusClass}" ${styleAttr}>
                             <div class="inner-icon-box ${iconBoxClass}">${iconSvg}</div>
                             <div class="inner-content">
                                 <span class="inner-title">${titleText}</span>
@@ -353,12 +370,28 @@ function renderScheduleList(schedule, isToday) {
             }
         } else {
             // Electricity Available Inner Card
-            // If the parent grid slot is active, we highlight this inner card too (green)
+            // Calculate progress for the main grid block as well if active
             let activeClass = isSlotActive ? 'active-inner status-grid' : '';
+            let styleAttr = '';
             
+            if (isSlotActive && isToday) {
+                 // For nextDay blocks, calc requires offset handling, but simplified here for single day
+                 let sVal = startVal;
+                 let eVal = endVal;
+                 // Handle midnight crossing for calc if needed (simple version)
+                 if (eVal < sVal) eVal += 24 * 60;
+                 let cVal = currentTimeVal;
+                 if (cVal < sVal) cVal += 24 * 60;
+
+                 const totalDuration = eVal - sVal;
+                 const elapsed = cVal - sVal;
+                 const percentRemaining = Math.max(0, 100 - ((elapsed / totalDuration) * 100));
+                 styleAttr = `style="--progress: ${percentRemaining}%"`;
+            }
+
             innerContent += `
                 <div class="inner-list">
-                    <div class="inner-card ${activeClass}">
+                    <div class="inner-card ${activeClass}" ${styleAttr}>
                         <div class="inner-icon-box icon-elec">${ICONS.elecBox}</div>
                         <div class="inner-content">
                             <span class="inner-title" style="color:var(--accent-green)">${t.elec_avail}</span>
