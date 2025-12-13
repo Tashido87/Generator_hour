@@ -283,11 +283,25 @@ function updateHeroStatus(schedule, isToday, now) {
     let nextEventTime = null;
     let nextEventLabel = "";
     
-    for (const slot of schedule) {
+    // Use standard loop to allow look-ahead by index
+    for (let i = 0; i < schedule.length; i++) {
+        const slot = schedule[i];
+
         if (now >= slot.start && now < slot.end) {
             activeSlot = slot;
+            
             if (slot.type === 'grid') {
-                nextEventTime = slot.end;
+                // FIXED LOGIC: Look ahead for consecutive 'grid' slots
+                let effectiveEndTime = slot.end;
+                let nextIdx = i + 1;
+                
+                // If next slot exists and is also grid, use its end time instead
+                while(nextIdx < schedule.length && schedule[nextIdx].type === 'grid') {
+                    effectiveEndTime = schedule[nextIdx].end;
+                    nextIdx++;
+                }
+
+                nextEventTime = effectiveEndTime;
                 nextEventLabel = t.power_off;
                 setHeroTheme('grid', t.grid_on, ICONS.bolt);
             } else {
