@@ -17,7 +17,8 @@
     --c-yellow-glow: rgba(255, 214, 10, 0.4);
     
     /* Dimensions */
-    --header-height: 28vh; /* Reduced from 38vh */
+    /* INCREASED HEIGHT: Pushes the sheet down further */
+    --header-height: 35vh; 
     --sheet-radius: 24px;
 }
 
@@ -54,21 +55,20 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Center vertically in the available space */
+    justify-content: center;
     position: relative;
     transition: color 0.3s;
-    /* FIX: Add padding for Safe Area (Notch) */
-    padding-top: max(20px, env(safe-area-inset-top)); 
+    /* FIX: Added simpler calculation for padding */
     padding-bottom: 20px;
 }
 
 .top-nav {
     position: absolute;
-    /* FIX: Align below the safe area */
-    top: max(10px, env(safe-area-inset-top)); 
+    top: 0; 
     left: 0; 
     width: 100%;
-    padding: 0 20px;
+    /* FIX: Much larger top padding to clear the iPhone notch */
+    padding: max(50px, env(safe-area-inset-top)) 20px 0 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -80,7 +80,7 @@ body {
     backdrop-filter: blur(10px);
     padding: 6px 12px;
     border-radius: 20px;
-    font-size: 0.75rem; /* Smaller text */
+    font-size: 0.75rem; 
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -98,7 +98,7 @@ body {
     border: 1px solid rgba(255,255,255,0.1);
     backdrop-filter: blur(10px);
     border-radius: 50%;
-    width: 32px; height: 32px; /* Smaller button */
+    width: 32px; height: 32px; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -112,13 +112,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px; /* Tighter gap */
-    margin-top: 10px;
+    gap: 8px;
+    /* FIX: Add top margin so it doesn't hit the nav on small screens */
+    margin-top: 60px; 
 }
 
 .status-icon-wrapper {
     position: relative;
-    width: 60px; height: 60px; /* Smaller icon wrapper */
+    width: 60px; height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -126,7 +127,7 @@ body {
 }
 
 .hero-icon svg {
-    width: 32px; height: 32px; /* Smaller SVG */
+    width: 32px; height: 32px;
     filter: drop-shadow(0 0 10px rgba(0,0,0,0.3));
 }
 
@@ -146,7 +147,7 @@ body {
 
 .hero-status h1 {
     margin: 0;
-    font-size: 1.8rem; /* Reduced font size */
+    font-size: 1.8rem;
     font-weight: 800;
     text-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
@@ -232,7 +233,6 @@ body {
     opacity: 0; cursor: pointer;
 }
 
-/* New Today Button */
 .today-btn-small {
     background: rgba(255,255,255,0.1);
     border: none;
@@ -243,12 +243,11 @@ body {
     border-radius: 6px;
     cursor: pointer;
     margin-top: 2px;
-    display: none; /* Hidden by default, shown via JS if not today */
+    display: none;
 }
 .today-btn-small.visible { display: block; }
 
-
-/* --- TIMELINE (Compact Version) --- */
+/* --- TIMELINE (Compact) --- */
 .timeline {
     position: relative;
     padding-left: 16px;
@@ -256,7 +255,6 @@ body {
     flex-direction: column;
 }
 
-/* The vertical line */
 .timeline::before {
     content: '';
     position: absolute;
@@ -269,7 +267,7 @@ body {
 .timeline-item {
     position: relative;
     padding-left: 20px;
-    padding-bottom: 16px; /* Reduced spacing */
+    padding-bottom: 16px;
     opacity: 0.6;
     transition: opacity 0.3s, transform 0.3s;
 }
@@ -287,10 +285,7 @@ body {
     transition: all 0.3s;
 }
 
-/* Active State */
-.timeline-item.active {
-    opacity: 1;
-}
+.timeline-item.active { opacity: 1; }
 .timeline-item.active .timeline-dot {
     transform: scale(1.1);
     box-shadow: 0 0 12px var(--dot-color);
@@ -310,7 +305,7 @@ body {
 .card-bubble {
     background: var(--c-card);
     border-radius: 14px;
-    padding: 12px 14px; /* Much smaller padding */
+    padding: 12px 14px;
     border: 1px solid rgba(255,255,255,0.05);
 }
 
@@ -323,15 +318,13 @@ body {
     gap: 10px;
 }
 
-/* Force SVG icons inside cards to be small */
 .card-title svg {
     width: 18px; height: 18px;
     opacity: 0.8;
 }
 
-/* Inner Progress Bar */
 .progress-container {
-    height: 3px; /* Thinner */
+    height: 3px;
     background: rgba(255,255,255,0.1);
     border-radius: 4px;
     margin-top: 10px;
