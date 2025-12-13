@@ -274,30 +274,42 @@ function renderTimeline(schedule, isToday, now) {
 function updateHeroStatus(schedule, isToday, now) {
     const t = TRANSLATIONS[currentLang];
     
+    // If not viewing today, show generic "Future Date"
     if (!isToday) {
         setHeroTheme('neutral', "Future Date", "");
         return;
     }
 
+    // --- LOOKAHEAD LOGIC START ---
+    // Combine today's schedule with tomorrow's schedule to handle day-crossing continuity
+    const nextDay = new Date(currentDate);
+    nextDay.setDate(currentDate.getDate() + 1);
+    const diffDays = dayDiffUTC(ANCHOR_DATE, nextDay);
+    const isNextPatternA = Math.abs(diffDays) % 2 === 0;
+    const nextPatternRaw = isNextPatternA ? SCHEDULE_PATTERNS.A : SCHEDULE_PATTERNS.B;
+    const nextSchedule = buildScheduleObjects(nextPatternRaw, nextDay);
+    
+    const fullSchedule = schedule.concat(nextSchedule);
+    // --- LOOKAHEAD LOGIC END ---
+
     let activeSlot = null;
     let nextEventTime = null;
     let nextEventLabel = "";
     
-    // Use standard loop to allow look-ahead by index
-    for (let i = 0; i < schedule.length; i++) {
-        const slot = schedule[i];
+    // We iterate the COMBINED schedule
+    for (let i = 0; i < fullSchedule.length; i++) {
+        const slot = fullSchedule[i];
 
         if (now >= slot.start && now < slot.end) {
             activeSlot = slot;
             
             if (slot.type === 'grid') {
-                // FIXED LOGIC: Look ahead for consecutive 'grid' slots
+                // If it's GRID, check if the NEXT slot in the combined list is ALSO grid
                 let effectiveEndTime = slot.end;
                 let nextIdx = i + 1;
                 
-                // If next slot exists and is also grid, use its end time instead
-                while(nextIdx < schedule.length && schedule[nextIdx].type === 'grid') {
-                    effectiveEndTime = schedule[nextIdx].end;
+                while(nextIdx < fullSchedule.length && fullSchedule[nextIdx].type === 'grid') {
+                    effectiveEndTime = fullSchedule[nextIdx].end;
                     nextIdx++;
                 }
 
@@ -333,6 +345,7 @@ function updateHeroStatus(schedule, isToday, now) {
             nextEventTime = slot.start;
             nextEventLabel = slot.type === 'grid' ? t.grid_on : t.power_off;
             setHeroTheme('neutral', "Waiting...", ICONS.powerOff);
+            break; 
         }
     }
 
