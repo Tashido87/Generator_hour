@@ -1,414 +1,444 @@
 // --- CONFIGURATION ---
-const ANCHOR_DATE = new Date('2025-12-09T00:00:00');
-
-const BURMESE_NUMS = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
+const ANCHOR_DATE = new Date('2025-12-09T00:00:00Z');
 
 const TRANSLATIONS = {
     en: {
-        title: "Power Schedule",
-        patternA_title: "PATTERN A: LATE MORNING OUTAGE",
-        patternA_desc: "Outage: 9:00 AM - 1:00 PM",
-        patternB_title: "PATTERN B: SPLIT OUTAGE",
-        patternB_desc: "Outage: 7:30 AM - 9:00 AM & 1:00 PM - 5:00 PM",
         grid_on: "GRID ON",
         power_off: "GRID OFF",
         gen_running: "Generator ON",
-        gen_rest: "Gen Resting",
+        gen_rest: "Generator Rest",
         elec_avail: "Electricity Available",
         next_day: "(Next Day)",
-        elevatorLabel: "Elevator (Off-hours):",
+        elevatorLabel: "Elevator:",
         elevatorFee: "10,000 MMK fee",
-        btn_today: "Today",
-        range_separator: " - ", 
-        unit_hour: "", 
-        periods: { morning: "AM", afternoon: "PM", evening: "PM", night: "PM" },
+        today: "Today",
+        next_change: "Next change",
+        in: "in",
+        back_today: "Back to Today",
         months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     },
     mm: {
-        title: "မီးပေးချိန် ဇယား",
-        patternA_title: "ပုံစံ A (မနက်ပိုင်း မီးပျက်)",
-        patternA_desc: "မီးပျက်ချိန် - မနက် ၉ မှ နေ့လည် ၁",
-        patternB_title: "ပုံစံ B (နှစ်ချိန်ခွဲ)",
-        patternB_desc: "မီးပျက်ချိန် - မနက် ၇:၃၀ မှ ၉ ၊ နေ့လည် ၁ မှ ၅",
         grid_on: "မီးလာ",
         power_off: "မီးပျက်",
         gen_running: "မီးစက်မောင်း",
         gen_rest: "မီးစက်နား",
         elec_avail: "မီးလာ (EPC)",
         next_day: "(နောက်နေ့)",
-        elevatorLabel: "ဓာတ်လှေကား (အချိန်ပြင်ပ):",
+        elevatorLabel: "ဓာတ်လှေကား:",
         elevatorFee: "၁၀,၀၀၀ ကျပ်",
-        btn_today: "ဒီနေ့",
-        range_separator: " မှ ", 
-        unit_hour: "",
-        periods: { morning: "မနက်", afternoon: "နေ့လည်", evening: "ညနေ", night: "ည" },
+        today: "ဒီနေ့",
+        next_change: "နောက်အပြောင်းအလဲ",
+        in: "နောက်",
+        back_today: "ဒီနေ့ပြန်သွား",
         months: ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "သြဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"]
     }
 };
 
+const BURMESE_NUMS = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
+
+// --- DATA ---
 const GEN_RULES = {
-    '07:30-09:00': [
-        { start: '07:30', end: '09:00', status: 'Running' }
-    ],
+    '07:30-09:00': [{ s: '07:30', e: '09:00', status: 'Running' }],
     '09:00-13:00': [
-        { start: '09:00', end: '11:00', status: 'Running' },
-        { start: '11:00', end: '12:00', status: 'Rest' },
-        { start: '12:00', end: '13:00', status: 'Running' }
+        { s: '09:00', e: '11:00', status: 'Running' },
+        { s: '11:00', e: '12:00', status: 'Rest' },
+        { s: '12:00', e: '13:00', status: 'Running' }
     ],
     '13:00-17:00': [
-        { start: '13:00', end: '14:00', status: 'Rest' },
-        { start: '14:00', end: '15:00', status: 'Running' },
-        { start: '15:00', end: '16:00', status: 'Rest' },
-        { start: '16:00', end: '17:00', status: 'Running' }
+        { s: '13:00', e: '14:00', status: 'Rest' },
+        { s: '14:00', e: '15:00', status: 'Running' },
+        { s: '15:00', e: '16:00', status: 'Rest' },
+        { s: '16:00', e: '17:00', status: 'Running' }
     ]
 };
 
-// Icons (SVG Strings)
-const ICONS = {
-    bolt: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
-    power: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`,
-    genBox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
-    restBox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M7 12h10"></path></svg>`,
-    elecBox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`
+const SCHEDULE_PATTERNS = {
+    A: [
+        { s: '05:00', e: '09:00', type: 'grid' },
+        { s: '09:00', e: '13:00', type: 'outage', ruleKey: '09:00-13:00' },
+        { s: '13:00', e: '17:00', type: 'grid' },
+        { s: '17:00', e: '05:00', type: 'grid', nextDay: true }
+    ],
+    B: [
+        { s: '05:00', e: '07:30', type: 'grid' },
+        { s: '07:30', e: '09:00', type: 'outage', ruleKey: '07:30-09:00' },
+        { s: '09:00', e: '13:00', type: 'grid' },
+        { s: '13:00', e: '17:00', type: 'outage', ruleKey: '13:00-17:00' },
+        { s: '17:00', e: '09:00', type: 'grid', nextDay: true }
+    ]
 };
 
 // --- DOM ELEMENTS ---
 const datePicker = document.getElementById('date-picker');
+const dateText = document.getElementById('display-date-text');
 const prevBtn = document.getElementById('prev-day');
 const nextBtn = document.getElementById('next-day');
-const todayBtn = document.getElementById('today-btn');
-const summaryContainer = document.getElementById('daily-summary');
-const scheduleContainer = document.getElementById('schedule-container');
+const btnReturnToday = document.getElementById('btn-return-today');
+const timelineContainer = document.getElementById('timeline-container');
 const langToggle = document.getElementById('lang-toggle');
-const displayDateText = document.getElementById('display-date-text');
-const displayPatternBadge = document.getElementById('display-pattern-badge');
+const heroStatusText = document.getElementById('hero-status-text');
+const heroCountdown = document.getElementById('hero-countdown');
+const heroIcon = document.getElementById('hero-icon');
+const patternName = document.getElementById('pattern-name');
+const appBg = document.getElementById('app-background');
+const fabNow = document.getElementById('fab-now');
+const sheet = document.querySelector('.schedule-sheet');
 
-// --- STATE MANAGEMENT ---
+// --- ICONS (SVG) ---
+const ICONS = {
+    bolt: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+    powerOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>`,
+    plug: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M2 12h20"/><path d="M12 12v10"/></svg>`
+};
+
+// --- STATE ---
 let currentLang = localStorage.getItem('powerSched_lang') || 'en';
 let currentDate = new Date();
 
-// --- INITIALIZATION ---
-applyLanguage(currentLang);
-updateUI(currentDate);
+// --- INIT ---
+init();
 
-// Refresh every minute to update progress bars
-setInterval(() => {
-    // Only update if looking at today
-    const now = new Date();
-    if (currentDate.getDate() === now.getDate() && 
-        currentDate.getMonth() === now.getMonth()) {
-        updateUI(currentDate);
-    }
-}, 60000);
+function init() {
+    applyLanguage(currentLang);
+    updateUI();
+    
+    // Updates
+    setInterval(() => {
+        const now = new Date();
+        // Refresh if minute changes or day matches
+        if (currentDate.getDate() === now.getDate()) updateUI();
+    }, 60000);
+
+    // Scroll listener for FAB
+    sheet.addEventListener('scroll', () => {
+        const activeItem = document.querySelector('.timeline-item.active');
+        if (activeItem) {
+            const rect = activeItem.getBoundingClientRect();
+            if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                fabNow.classList.add('show');
+            } else {
+                fabNow.classList.remove('show');
+            }
+        }
+    });
+
+    fabNow.addEventListener('click', () => {
+        vibrate();
+        const activeItem = document.querySelector('.timeline-item.active');
+        if (activeItem) activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+}
 
 // --- EVENT LISTENERS ---
 langToggle.addEventListener('click', () => {
+    vibrate();
     currentLang = currentLang === 'en' ? 'mm' : 'en';
     localStorage.setItem('powerSched_lang', currentLang);
     applyLanguage(currentLang);
-    updateUI(currentDate);
+    updateUI();
 });
 
 datePicker.addEventListener('change', (e) => {
     if(!e.target.value) return;
-    const parts = e.target.value.split('-');
-    currentDate = new Date(parts[0], parts[1] - 1, parts[2]); 
-    updateUI(currentDate);
+    const [y, m, d] = e.target.value.split('-').map(Number);
+    currentDate = new Date(y, m - 1, d); 
+    updateUI();
 });
 
 prevBtn.addEventListener('click', () => {
+    vibrate();
     currentDate.setDate(currentDate.getDate() - 1);
-    updateUI(currentDate);
+    updateUI();
 });
 
 nextBtn.addEventListener('click', () => {
+    vibrate();
     currentDate.setDate(currentDate.getDate() + 1);
-    updateUI(currentDate);
+    updateUI();
 });
 
-todayBtn.addEventListener('click', () => {
+btnReturnToday.addEventListener('click', () => {
+    vibrate();
     currentDate = new Date();
-    updateUI(currentDate);
+    updateUI();
 });
-
-// --- HELPER FUNCTIONS ---
-
-function toBurmeseNum(num) {
-    return num.toString().split('').map(char => {
-        const digit = parseInt(char);
-        return isNaN(digit) ? char : BURMESE_NUMS[digit];
-    }).join('');
-}
-
-function formatDateHeader(date) {
-    const t = TRANSLATIONS[currentLang];
-    const day = date.getDate();
-    const month = t.months[date.getMonth()];
-    
-    const options = { weekday: 'long' };
-    const weekday = new Intl.DateTimeFormat(currentLang === 'mm' ? 'my-MM' : 'en-US', options).format(date);
-
-    if (currentLang === 'mm') {
-        return `${weekday}၊ ${month} ${toBurmeseNum(day)}`;
-    }
-    return `${weekday}, ${month} ${day}`;
-}
-
-function formatTime(time24) {
-    const [hours, minutes] = time24.split(':');
-    let h = parseInt(hours, 10);
-    const m = parseInt(minutes, 10);
-    const t = TRANSLATIONS[currentLang];
-    
-    let period = "";
-    if (h >= 5 && h < 12) period = t.periods.morning;
-    else if (h >= 12 && h < 17) period = t.periods.afternoon;
-    else if (h >= 17 && h < 22) period = t.periods.evening;
-    else period = t.periods.night; 
-
-    let displayH = h % 12;
-    displayH = displayH ? displayH : 12; 
-
-    if (currentLang === 'mm') {
-        // Burmese Format
-        let displayNum = toBurmeseNum(displayH);
-        let minStr = m > 0 ? `:${toBurmeseNum(m)}` : '';
-        return `${period} ${displayNum}${minStr}`;
-    } else {
-        // English Format
-        let minStr = m.toString().padStart(2, '0');
-        return `${displayH}:${minStr} ${period}`;
-    }
-}
 
 // --- CORE LOGIC ---
 
-function applyLanguage(lang) {
-    const t = TRANSLATIONS[lang];
-    const langLabel = langToggle.querySelector('.lang-text');
-    const flagIcon = langToggle.querySelector('.flag-icon');
+function updateUI() {
+    const t = TRANSLATIONS[currentLang];
+    const now = new Date();
     
-    if (lang === 'en') {
-        flagIcon.textContent = "🇺🇸";
-        langLabel.textContent = "EN";
+    // 1. Header & Date
+    const isToday = isSameDay(currentDate, now);
+    dateText.textContent = formatDate(currentDate);
+    
+    // Toggle "Back to Today" button
+    if(isToday) {
+        btnReturnToday.classList.remove('visible');
     } else {
-        flagIcon.textContent = "🇲🇲";
-        langLabel.textContent = "MM";
+        btnReturnToday.textContent = t.back_today;
+        btnReturnToday.classList.add('visible');
     }
     
+    // Sync Date Picker
+    const y = currentDate.getFullYear();
+    const m = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const d = String(currentDate.getDate()).padStart(2, '0');
+    datePicker.value = `${y}-${m}-${d}`;
+
+    // 2. Pattern
+    const diffDays = dayDiffUTC(ANCHOR_DATE, currentDate);
+    const isPatternA = Math.abs(diffDays) % 2 === 0;
+    patternName.textContent = isPatternA ? "Pattern A" : "Pattern B";
+
+    // 3. Build Schedule
+    const rawPattern = isPatternA ? SCHEDULE_PATTERNS.A : SCHEDULE_PATTERNS.B;
+    const schedule = buildScheduleObjects(rawPattern, currentDate);
+
+    // 4. Render
+    renderTimeline(schedule, isToday, now);
+    updateHeroStatus(schedule, isToday, now);
+}
+
+function buildScheduleObjects(pattern, date) {
+    return pattern.map(slot => {
+        const { start, end } = makeInterval(date, slot.s, slot.e, slot.nextDay);
+        let subRules = [];
+        if (slot.ruleKey && GEN_RULES[slot.ruleKey]) {
+            subRules = GEN_RULES[slot.ruleKey].map(r => {
+                const rInt = makeInterval(start, r.s, r.e, false);
+                return { ...r, start: rInt.start, end: rInt.end };
+            });
+        }
+        return { ...slot, start, end, subRules };
+    });
+}
+
+function renderTimeline(schedule, isToday, now) {
+    timelineContainer.innerHTML = '';
+    const t = TRANSLATIONS[currentLang];
+
+    schedule.forEach(slot => {
+        const isActive = isToday && now >= slot.start && now < slot.end;
+        // Inverted logic is handled inside getProgressPct
+        const progress = isActive ? getProgressPct(now, slot.start, slot.end) : 0;
+        
+        let themeClass = slot.type === 'grid' ? 'status-grid' : 'status-outage';
+        
+        const item = document.createElement('div');
+        item.className = `timeline-item ${isActive ? 'active' : ''} ${themeClass}`;
+        
+        const timeStr = `${formatTime(slot.start)} - ${formatTime(slot.end)}`;
+        const label = slot.type === 'grid' ? t.grid_on : t.power_off;
+        
+        let subHtml = '';
+        if (slot.subRules.length > 0) {
+            subHtml = `<div class="sub-timeline">`;
+            slot.subRules.forEach(r => {
+                const subActive = isToday && now >= r.start && now < r.end;
+                const rStatus = r.status === 'Running' ? 'status-gen' : 'status-rest';
+                const rLabel = r.status === 'Running' ? t.gen_running : t.gen_rest;
+                
+                subHtml += `
+                    <div class="sub-item ${subActive ? 'active-sub' : ''}" style="--sub-color: var(--c-${rStatus === 'status-gen' ? 'yellow' : 'text-sec'})">
+                        <span>${rLabel}</span>
+                        <span>${formatTime(r.start)}</span>
+                    </div>
+                `;
+            });
+            subHtml += `</div>`;
+        }
+
+        item.innerHTML = `
+            <div class="timeline-dot"></div>
+            <div class="time-label">${timeStr}</div>
+            <div class="card-bubble">
+                <div class="card-title">
+                    ${slot.type === 'grid' ? ICONS.bolt : ICONS.powerOff}
+                    <span>${label}</span>
+                </div>
+                ${isActive ? `<div class="progress-container"><div class="progress-bar" style="--prog:${progress}%"></div></div>` : ''}
+                ${subHtml}
+            </div>
+        `;
+        
+        timelineContainer.appendChild(item);
+        
+        if (isActive) {
+            setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+        }
+    });
+}
+
+function updateHeroStatus(schedule, isToday, now) {
+    const t = TRANSLATIONS[currentLang];
+    
+    if (!isToday) {
+        setHeroTheme('neutral', "Future Date", "");
+        return;
+    }
+
+    let activeSlot = null;
+    let nextEventTime = null;
+    let nextEventLabel = "";
+    
+    for (const slot of schedule) {
+        if (now >= slot.start && now < slot.end) {
+            activeSlot = slot;
+            if (slot.type === 'grid') {
+                nextEventTime = slot.end;
+                nextEventLabel = t.power_off;
+                setHeroTheme('grid', t.grid_on, ICONS.bolt);
+            } else {
+                let subActive = null;
+                for (const r of slot.subRules) {
+                    if (now >= r.start && now < r.end) {
+                        subActive = r;
+                        nextEventTime = r.end;
+                        nextEventLabel = r.status === 'Running' ? t.gen_rest : t.gen_running;
+                        if (r === slot.subRules[slot.subRules.length - 1]) nextEventLabel = t.grid_on;
+                        break;
+                    }
+                }
+                
+                if (subActive) {
+                    if (subActive.status === 'Running') {
+                        setHeroTheme('gen', t.gen_running, ICONS.plug);
+                    } else {
+                        setHeroTheme('rest', t.gen_rest, ICONS.powerOff);
+                    }
+                } else {
+                    nextEventTime = slot.end;
+                    nextEventLabel = t.grid_on;
+                    setHeroTheme('outage', t.power_off, ICONS.powerOff);
+                }
+            }
+            break;
+        } else if (now < slot.start && !nextEventTime) {
+            nextEventTime = slot.start;
+            nextEventLabel = slot.type === 'grid' ? t.grid_on : t.power_off;
+            setHeroTheme('neutral', "Waiting...", ICONS.powerOff);
+        }
+    }
+
+    if (nextEventTime) {
+        const diffMins = Math.ceil((nextEventTime - now) / 60000);
+        heroCountdown.textContent = formatCountdown(diffMins, nextEventLabel);
+    } else {
+        heroCountdown.textContent = t.today;
+    }
+}
+
+// --- HELPERS ---
+
+function setHeroTheme(type, text, iconHtml) {
+    heroStatusText.textContent = text;
+    if (iconHtml) heroIcon.innerHTML = iconHtml;
+    
+    let color = '#8e8e93';
+    let glow = '#333';
+    
+    if (type === 'grid') { color = 'var(--c-green)'; glow = 'var(--c-green-glow)'; }
+    else if (type === 'outage' || type === 'rest') { color = 'var(--c-red)'; glow = 'var(--c-red-glow)'; }
+    else if (type === 'gen') { color = 'var(--c-yellow)'; glow = 'var(--c-yellow-glow)'; }
+    
+    document.querySelector('.status-header').style.color = color;
+    appBg.style.setProperty('--bg-glow', glow);
+}
+
+function formatCountdown(mins, label) {
+    const t = TRANSLATIONS[currentLang];
+    
+    if (currentLang === 'mm') {
+        let timeStr = "";
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (h > 0) timeStr += `${toBurmeseNum(h)} နာရီ`;
+        if (m > 0) timeStr += ` ${toBurmeseNum(m)} မိနစ်`;
+        if (h===0 && m===0) return "အခုပြောင်းမယ်";
+        if (timeStr === "") timeStr = `${toBurmeseNum(mins)} မိနစ်`;
+        return `နောက် ${timeStr} တွင် ${label}မည်`;
+    } else {
+        let timeStr = mins < 60 ? `${mins} min` : `${Math.floor(mins/60)} hr ${mins%60} min`;
+        return `${t.next_change}: ${label} ${t.in} ${timeStr}`;
+    }
+}
+
+function applyLanguage(lang) {
+    const t = TRANSLATIONS[lang];
+    langToggle.querySelector('.flag').textContent = lang === 'en' ? "🇺🇸" : "🇲🇲";
     document.querySelectorAll('[data-key]').forEach(el => {
         const key = el.getAttribute('data-key');
         if (t[key]) el.textContent = t[key];
     });
 }
 
-function updateUI(date) {
-    const t = TRANSLATIONS[currentLang];
-
-    // 1. Is it Today?
-    const today = new Date();
-    const isToday = date.getDate() === today.getDate() &&
-                    date.getMonth() === today.getMonth() &&
-                    date.getFullYear() === today.getFullYear();
-
-    if (isToday) todayBtn.classList.add('active');
-    else todayBtn.classList.remove('active');
-
-    // 2. Date Header
-    displayDateText.textContent = formatDateHeader(date);
-    
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    datePicker.value = `${y}-${m}-${d}`;
-
-    // 3. Determine Pattern
-    const anchor = new Date(ANCHOR_DATE);
-    anchor.setHours(0,0,0,0);
-    const target = new Date(date);
-    target.setHours(0,0,0,0);
-    const diffTime = target.getTime() - anchor.getTime();
-    const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
-    const isAnchorPattern = Math.abs(diffDays) % 2 === 0;
-
-    // 4. Update Colors & Badge based on Pattern
-    let patternTitle = "";
-    let daySchedule = [];
-    
-    if (isAnchorPattern) {
-        // Pattern A
-        patternTitle = t.patternA_title;
-        displayPatternBadge.textContent = patternTitle;
-        displayPatternBadge.style.backgroundColor = "rgba(255, 69, 58, 0.2)";
-        displayPatternBadge.style.color = "var(--accent-red)";
-        summaryContainer.style.borderLeftColor = "var(--accent-red)";
-        
-        daySchedule = [
-            { timeKey: '05:00-09:00', start:'05:00', end:'09:00', type: 'grid' },
-            { timeKey: '09:00-13:00', start:'09:00', end:'13:00', type: 'outage' },
-            { timeKey: '13:00-17:00', start:'13:00', end:'17:00', type: 'grid' },
-            { timeKey: '17:00-05:00', start:'17:00', end:'05:00', type: 'grid', nextDay: true }
-        ];
-    } else {
-        // Pattern B
-        patternTitle = t.patternB_title;
-        displayPatternBadge.textContent = patternTitle;
-        displayPatternBadge.style.backgroundColor = "rgba(255, 214, 10, 0.2)";
-        displayPatternBadge.style.color = "var(--accent-yellow)";
-        summaryContainer.style.borderLeftColor = "var(--accent-yellow)";
-
-        daySchedule = [
-            { timeKey: '05:00-07:30', start:'05:00', end:'07:30', type: 'grid' },
-            { timeKey: '07:30-09:00', start:'07:30', end:'09:00', type: 'outage' },
-            { timeKey: '09:00-13:00', start:'09:00', end:'13:00', type: 'grid' },
-            { timeKey: '13:00-17:00', start:'13:00', end:'17:00', type: 'outage' },
-            { timeKey: '17:00-09:00', start:'17:00', end:'09:00', type: 'grid', nextDay: true }
-        ];
-    }
-
-    summaryContainer.innerHTML = isAnchorPattern ? t.patternA_desc : t.patternB_desc;
-
-    renderScheduleList(daySchedule, isToday);
+function vibrate() {
+    if (navigator.vibrate) navigator.vibrate(10);
 }
 
-function renderScheduleList(schedule, isToday) {
-    scheduleContainer.innerHTML = ''; 
+function dayDiffUTC(a, b) {
+    const au = Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
+    const bu = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.floor((bu - au) / 86400000);
+}
+
+function makeInterval(base, s, e, next) {
+    const [sH, sM] = s.split(':').map(Number);
+    const [eH, eM] = e.split(':').map(Number);
+    const start = new Date(base); start.setHours(sH, sM, 0, 0);
+    const end = new Date(base); end.setHours(eH, eM, 0, 0);
+    if (next || end <= start) end.setDate(end.getDate() + 1);
+    return { start, end };
+}
+
+function getProgressPct(now, start, end) {
+    const total = end - start;
+    const elapsed = now - start;
+    const pct = (elapsed / total) * 100;
+    
+    // Return REMAINING percentage (Like a battery draining, starts at 100 goes to 0)
+    return Math.max(0, Math.min(100, 100 - pct));
+}
+
+function isSameDay(d1, d2) {
+    return d1.getDate() === d2.getDate() && 
+           d1.getMonth() === d2.getMonth() && 
+           d1.getFullYear() === d2.getFullYear();
+}
+
+function formatDate(date) {
     const t = TRANSLATIONS[currentLang];
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMin = now.getMinutes();
-    const currentTimeVal = currentHour * 60 + currentMin;
+    const day = date.getDate();
+    const month = t.months[date.getMonth()];
+    const weekday = new Intl.DateTimeFormat(currentLang === 'mm' ? 'my-MM' : 'en-US', { weekday: 'short' }).format(date);
+    
+    return currentLang === 'mm' 
+        ? `${weekday}၊ ${month} ${toBurmeseNum(day)}`
+        : `${weekday}, ${month} ${day}`;
+}
 
-    schedule.forEach(slot => {
-        const card = document.createElement('div');
-        card.className = 'time-slot';
+function formatTime(d) {
+    let h = d.getHours();
+    let m = d.getMinutes();
+    const t = TRANSLATIONS[currentLang];
+    
+    let period = h >= 12 ? "PM" : "AM";
+    if (currentLang === 'mm') {
+         if (h >= 5 && h < 12) period = "မနက်";
+        else if (h >= 12 && h < 17) period = "နေ့လည်";
+        else if (h >= 17 && h < 22) period = "ညနေ";
+        else period = "ည";
+    }
+    
+    let dh = h % 12 || 12;
+    if (currentLang === 'mm') {
+        return `${period} ${toBurmeseNum(dh)}${m > 0 ? ':'+toBurmeseNum(m) : ''}`;
+    }
+    return `${dh}:${m.toString().padStart(2,'0')} ${period}`;
+}
 
-        // Check Main Slot Active State
-        let isSlotActive = false;
-        let startVal, endVal;
-
-        if (isToday) {
-            const [sH, sM] = slot.start.split(':').map(Number);
-            const [eH, eM] = slot.end.split(':').map(Number);
-            startVal = sH * 60 + sM;
-            endVal = eH * 60 + eM;
-            
-            if (slot.nextDay) {
-                if (currentTimeVal >= startVal || currentTimeVal < endVal) isSlotActive = true;
-            } else {
-                if (currentTimeVal >= startVal && currentTimeVal < endVal) isSlotActive = true;
-            }
-        }
-
-        if (isSlotActive) {
-            card.classList.add('active-now');
-            const dot = document.createElement('div');
-            dot.className = 'live-dot';
-            card.appendChild(dot);
-        }
-
-        // Header Section
-        let timeDisplay = `${formatTime(slot.start)}${t.range_separator}${formatTime(slot.end)}`;
-        if (slot.nextDay) timeDisplay += ` <small>${t.next_day}</small>`;
-
-        let statusBadge = '';
-        if (slot.type === 'grid') {
-            statusBadge = `<div class="status-pill status-grid-on"><span class="status-icon">${ICONS.bolt}</span> ${t.grid_on}</div>`;
-        } else {
-            statusBadge = `<div class="status-pill status-outage"><span class="status-icon">${ICONS.power}</span> ${t.power_off}</div>`;
-        }
-
-        let innerContent = '';
-
-        if (slot.type === 'outage') {
-            const rules = GEN_RULES[slot.timeKey];
-            if (rules) {
-                innerContent += `<div class="inner-list">`;
-                rules.forEach(rule => {
-                    // Logic to check if inner rule is active & Calc progress
-                    let isInnerActive = false;
-                    let percentRemaining = 100; // Default full if future
-
-                    if (isToday) {
-                        const [rSH, rSM] = rule.start.split(':').map(Number);
-                        const [rEH, rEM] = rule.end.split(':').map(Number);
-                        let rStartVal = rSH * 60 + rSM;
-                        let rEndVal = rEH * 60 + rEM;
-                        
-                        if (currentTimeVal >= rStartVal && currentTimeVal < rEndVal) {
-                            isInnerActive = true;
-                            // Calculate percentage remaining (100% at start, 0% at end)
-                            const totalDuration = rEndVal - rStartVal;
-                            const elapsed = currentTimeVal - rStartVal;
-                            percentRemaining = Math.max(0, 100 - ((elapsed / totalDuration) * 100));
-                        } else if (currentTimeVal >= rEndVal) {
-                            percentRemaining = 0; // Past
-                        }
-                    }
-
-                    const isRunning = rule.status === 'Running';
-                    const iconBoxClass = isRunning ? 'icon-gen' : 'icon-rest';
-                    const iconSvg = isRunning ? ICONS.genBox : ICONS.restBox;
-                    const titleText = isRunning ? t.gen_running : t.gen_rest;
-                    const rangeText = `${formatTime(rule.start)}${t.range_separator}${formatTime(rule.end)}`;
-                    
-                    let activeClass = isInnerActive ? 'active-inner' : '';
-                    let statusClass = isRunning ? '' : 'status-rest'; 
-                    let styleAttr = isInnerActive ? `style="--progress: ${percentRemaining}%"` : '';
-
-                    innerContent += `
-                        <div class="inner-card ${activeClass} ${statusClass}" ${styleAttr}>
-                            <div class="inner-icon-box ${iconBoxClass}">${iconSvg}</div>
-                            <div class="inner-content">
-                                <span class="inner-title">${titleText}</span>
-                                <span class="inner-desc">${rangeText}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-                innerContent += `</div>`;
-            }
-        } else {
-            // Electricity Available Inner Card
-            // Calculate progress for the main grid block as well if active
-            let activeClass = isSlotActive ? 'active-inner status-grid' : '';
-            let styleAttr = '';
-            
-            if (isSlotActive && isToday) {
-                 // For nextDay blocks, calc requires offset handling, but simplified here for single day
-                 let sVal = startVal;
-                 let eVal = endVal;
-                 // Handle midnight crossing for calc if needed (simple version)
-                 if (eVal < sVal) eVal += 24 * 60;
-                 let cVal = currentTimeVal;
-                 if (cVal < sVal) cVal += 24 * 60;
-
-                 const totalDuration = eVal - sVal;
-                 const elapsed = cVal - sVal;
-                 const percentRemaining = Math.max(0, 100 - ((elapsed / totalDuration) * 100));
-                 styleAttr = `style="--progress: ${percentRemaining}%"`;
-            }
-
-            innerContent += `
-                <div class="inner-list">
-                    <div class="inner-card ${activeClass}" ${styleAttr}>
-                        <div class="inner-icon-box icon-elec">${ICONS.elecBox}</div>
-                        <div class="inner-content">
-                            <span class="inner-title" style="color:var(--accent-green)">${t.elec_avail}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        card.innerHTML += `
-            <div class="slot-header">
-                <div class="time-range">${timeDisplay}</div>
-                ${statusBadge}
-            </div>
-            ${innerContent}
-        `;
-        
-        scheduleContainer.appendChild(card);
-    });
+function toBurmeseNum(n) {
+    return n.toString().split('').map(c => BURMESE_NUMS[parseInt(c)] || c).join('');
 }
